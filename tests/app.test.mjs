@@ -1,0 +1,23 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const html=fs.readFileSync(new URL('../dist/index.html',import.meta.url),'utf8');
+function node(extra={}){return {value:'',checked:false,hidden:false,disabled:false,step:'1',max:'100',files:[],listeners:{},style:{},classList:{values:new Set(),toggle(n,on){on?this.values.add(n):this.values.delete(n);},add(n){this.values.add(n);},remove(n){this.values.delete(n);}},addEventListener(n,fn){this.listeners[n]=fn;},click(){this.listeners.click?.({target:this});},append(){},appendChild(){},remove(){},...extra};}
+const nodes=new Map([...html.matchAll(/id="([^"]+)"/g)].map(m=>[m[1],node()]));
+for(const [id,v] of Object.entries({sample:'sample:Fold',seed:'1042',amount:'35',mode:'both','tangent-from':'1','tangent-to':'1','tangent-connections':'0','center-from':'2','center-to':'2','center-connections':'0'}))nodes.get(id).value=v;
+for(const id of ['show-grid','show-outline','show-tangents','show-centers'])nodes.get(id).checked=true;
+const toolButtons=['shape','lines'].map(tool=>node({dataset:{tool}})),viewButtons=['combined','final'].map(view=>node({dataset:{view}})),registry=new Map();
+globalThis.window={addEventListener(){}};
+function ok(id){assert.ok(nodes.has(id),`Missing DOM id ${id}`);}function trigger(id,event,properties={}){const el=nodes.get(id);Object.assign(el,properties);el.listeners[event]?.({target:el,key:properties.key||'',ctrlKey:false,metaKey:false});}
+globalThis.document={body:node(),getElementById:id=>{ok(id);return nodes.get(id);},querySelectorAll:q=>q==='[data-tool]'?toolButtons:q==='[data-view]'?viewButtons:[],createElement:()=>node(),addEventListener(){},modelContext:{registerTool(t){registry.set(t.name,t);}}};
+await import('../dist/app.mjs');
+assert.equal(window.tangentState.anchors.length,8);assert.equal(window.tangentState.source.points[0].x,190);assert.equal(window.tangentState.valid,true);
+nodes.get('select-all').listeners.click();assert.equal(nodes.get('selection-title').textContent,'8 anchors selected');nodes.get('deselect').listeners.click();assert.equal(nodes.get('selection-title').textContent,'No anchors selected');assert.equal(nodes.get('radius').disabled,true);nodes.get('undo').listeners.click();assert.equal(nodes.get('selection-title').textContent,'8 anchors selected');
+trigger('convex','pointerdown');trigger('convex','input',{value:'40'});trigger('convex','change');assert.ok(window.tangentState.anchors.filter(a=>a.kind==='convex').every(a=>a.radius===40));
+nodes.get('undo').listeners.click();assert.ok(window.tangentState.anchors.some(a=>a.kind==='convex'&&a.radius===34));nodes.get('redo').listeners.click();assert.ok(window.tangentState.anchors.filter(a=>a.kind==='convex').every(a=>a.radius===40));
+nodes.get('sample').value='sample:Triangle';nodes.get('use-sample').listeners.click();assert.equal(window.tangentState.anchors.length,3);assert.equal(nodes.get('start-screen').hidden,true,'start screen closes');
+toolButtons[1].listeners.click();assert.equal(window.tangentState.tool,'lines','tool');assert.equal(nodes.get('shape-controls').hidden,true,'shape hidden');assert.equal(nodes.get('network-controls').hidden,false,'network shown');assert.ok(nodes.get('geometry').innerHTML.includes('network-tangents'),'tangents');assert.ok(nodes.get('geometry').innerHTML.includes('network-radii'),'radii');assert.ok(!nodes.get('geometry').innerHTML.includes('anchor-text'),'no labels');
+assert.equal(window.tangentState.lineSystem.tangentField.edges.length,3,'default tangent degree is one');const centerBefore=structuredClone(window.tangentState.lineSystem.centerField);trigger('tangent-from','input',{value:'2'});trigger('tangent-to','input',{value:'2'});assert.equal(window.tangentState.lineSystem.tangentField.edges.length,6,'tangent degree is adjustable');assert.deepEqual(window.tangentState.lineSystem.centerField,centerBefore,'center field remains independent');
+trigger('show-centers','pointerdown');trigger('show-centers','change',{checked:false});assert.ok(!nodes.get('geometry').innerHTML.includes('id="network-lines"'));nodes.get('undo').listeners.click();assert.equal(nodes.get('show-centers').checked,true);assert.ok(nodes.get('geometry').innerHTML.includes('id="network-lines"'));
+assert.equal(registry.size,1);assert.equal(registry.get('read_tangent_study').execute().tool,'lines');
+for(const m of html.matchAll(/(?:src|href)="([^"#]+)"/g)){if(m[1].startsWith('data:'))continue;assert.ok(fs.existsSync(new URL('../dist/'+m[1],import.meta.url)),`Missing asset ${m[1]}`);}
+console.log('PASS: tool tabs, model state, radius editing, undo/redo, line layers, source changes and local assets.');
