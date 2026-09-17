@@ -52,6 +52,7 @@
     <div class="workspace-bar">
       <nav class="tool-tabs" aria-label="Tools"><button data-tool="shape" class="active"><span>01</span>Shape Interpreter</button><button data-tool="lines"><span>02</span>System Line Organizer</button></nav>
       <div class="views" id="shape-views" aria-label="Shape display"><button data-view="combined" class="active">System lines</button><button data-view="final">Final form</button></div>
+      <div class="views" id="line-views" aria-label="Line system visibility" hidden><button data-line-view="outline" class="active" aria-pressed="true">Show interpreted shape</button><button data-line-view="tangents" class="active" aria-pressed="true">Tangent lines</button><button data-line-view="centers" class="active" aria-pressed="true">Center lines</button></div>
     </div>
     <div class="drawing" id="drawing">
       <div class="drawing-label"><span>TANGENT STUDY / <b id="sample-label">FOLD</b></span><span id="anchor-summary">08 ANCHORS</span></div>
@@ -85,8 +86,9 @@
     </div>
     <section id="network-controls" class="control-section" hidden>
       <div class="section-heading"><h2>Line systems</h2><span class="micro">INDEPENDENT</span></div>
-      <label class="outline-toggle"><input id="show-outline" type="checkbox" checked> Show interpreted shape</label>
-      <div class="network-layers"><label><input id="show-tangents" type="checkbox" checked> Tangent lines</label><label><input id="show-centers" type="checkbox" checked> Center lines</label></div>
+      <input id="show-outline" type="checkbox" checked hidden>
+      <input id="show-tangents" type="checkbox" checked hidden>
+      <input id="show-centers" type="checkbox" checked hidden>
       <div class="participation-control"><span class="field-label">SELECTED POINT PARTICIPATION</span><label for="tangent-participation">TANGENT</label><select id="tangent-participation"><option value="" hidden>MIXED</option><option value="0">OFF</option><option value="0.5">LOW</option><option value="1">NORMAL</option><option value="2">HIGH</option></select><label for="center-participation">CENTER</label><select id="center-participation"><option value="" hidden>MIXED</option><option value="0">OFF</option><option value="0.5">LOW</option><option value="1">NORMAL</option><option value="2">HIGH</option></select><p class="hint">Select points in Shape Interpreter, then return here to set their line participation.</p></div>
       <details class="parameter-panel">
         <summary><span>Tangent-line parameters</span><output id="tangent-summary">1 FROM / 1 TO</output></summary>

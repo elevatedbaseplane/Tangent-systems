@@ -23,6 +23,7 @@ function setDisplayMode(mode){
  if(viewMode!=='light')document.body.classList.add(`mode-${viewMode}`);
  document.querySelectorAll('.mode-tab').forEach(tab=>tab.classList.toggle('active',tab.dataset.mode===viewMode));
  try{localStorage.setItem(DISPLAY_MODE_KEY,viewMode);}catch{}
+ render();
 }
 
 function source(){return sources.get(currentSource);}
@@ -59,8 +60,9 @@ function loadSource(key){
 function windingOf(list){return Math.sign(list.reduce((sum,a,i)=>{const b=list[(i+1)%list.length];return sum+a.x*b.y-b.x*a.y;},0))||1;}
 function render(){
  const display=fitAnchors(anchors).anchors,g=solve(display),networkView=tool==='lines',construction=tool==='shape'&&shapeView==='combined',centerNetwork=connectAnchors(display,Number($('center-from').value)||2,Number($('center-to').value)||2,Number($('center-connections').value)||0,$('center-routing').value,'centerParticipation'),tangentConnections=connectAnchors(display,Number($('tangent-from').value)||1,Number($('tangent-to').value)||1,Number($('tangent-connections').value)||0,$('tangent-routing').value,'tangentParticipation'),tangentNetwork=networkTangents(display,tangentConnections.edges,'shape'),sel=selected();
- $('shape-controls').hidden=networkView;$('network-controls').hidden=!networkView;$('fill-control').hidden=networkView;$('shape-views').hidden=networkView;
+ $('shape-controls').hidden=networkView;$('network-controls').hidden=!networkView;$('fill-control').hidden=networkView;$('shape-views').hidden=networkView;$('line-views').hidden=!networkView;
  document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===tool));document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===shapeView));
+ document.querySelectorAll('[data-line-view]').forEach(button=>{const control=$(`show-${button.dataset.lineView}`);button.classList.toggle('active',control.checked);button.setAttribute('aria-pressed',String(control.checked));});
  $('canvas-legend').innerHTML=networkView?'<i class="legend-structure"></i>Tangents <i class="legend-center"></i>Center lines <i class="legend-circle"></i>Radii':'<i class="legend-line"></i>Output <i class="legend-circle"></i>Construction';
  $('grid-layer').style.display=$('show-grid').checked?'':'none';$('frame-layer').style.display=$('show-grid').checked?'':'none';
  const formInk=viewMode==='neo'?'#2500cc':'#000',original=`<polygon points="${display.map(a=>`${a.x},${a.y}`).join(' ')}" fill="none" stroke="#888" stroke-width="1" stroke-dasharray="5 6"/>`;
@@ -109,6 +111,7 @@ function generateBatch(){const count=Math.max(2,Math.min(12,Math.round(Number($(
 $('amount').addEventListener('input',()=>generate('amount'));$('amount').addEventListener('change',endRecord);$('amount-value').addEventListener('change',e=>{const value=Number(e.target.value);if(Number.isFinite(value)){$('amount').value=Math.max(0,Math.min(100,value));generate('amount');endRecord();}});$('seed').addEventListener('change',()=>{generate('seed');endRecord();});$('mode').addEventListener('change',()=>{generate('mode');endRecord();});$('random-target').addEventListener('change',()=>{endRecord();render();});$('generate').addEventListener('click',()=>{const n=Number($('seed').value);$('seed').value=String(Number.isSafeInteger(n)?n+1:Math.floor(Math.random()*1000000));generate();endRecord();});$('generate-batch').addEventListener('click',generateBatch);
 $('reset')?.addEventListener('click',()=>{record();loadSource(currentSource);endRecord();});$('undo')?.addEventListener('click',undo);$('redo')?.addEventListener('click',redo);
 document.querySelectorAll('[data-tool]').forEach(b=>b.addEventListener('click',()=>{tool=b.dataset.tool;render();}));document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{shapeView=b.dataset.view;render();}));
+document.querySelectorAll('[data-line-view]').forEach(button=>button.addEventListener('click',()=>{const control=$(`show-${button.dataset.lineView}`);record(control.id);control.checked=!control.checked;endRecord();render();}));
 document.querySelectorAll('.mode-tab').forEach(button=>button.addEventListener('click',()=>setDisplayMode(button.dataset.mode)));
 for(const id of ['show-grid','fill','show-outline','show-tangents','show-centers'])$(id).addEventListener('change',()=>{record(id);endRecord();render();});for(const id of ['tangent-from','tangent-to','tangent-connections','center-from','center-to','center-connections']){$(id).addEventListener('input',()=>{record(id);render();});$(id).addEventListener('change',endRecord);$(`${id}-value`).addEventListener('change',e=>{const value=Number(e.target.value),control=$(id);if(Number.isFinite(value)){control.value=Math.max(Number(control.min),Math.min(Number(control.max),value));record(id);endRecord();render();}});}for(const id of ['tangent-routing','center-routing'])$(id).addEventListener('change',()=>{record(id);endRecord();render();});for(const [button,control] of [['tangent-next','tangent-connections'],['center-next','center-connections']])$(button).addEventListener('click',()=>{record(control);$(control).value=(Number($(control).value)+1)%1001;endRecord();render();});
 
@@ -117,6 +120,9 @@ function closeStart(){started=true;$('start-screen').hidden=true;}
 $('new-source').addEventListener('click',openStart);$('cancel-start').addEventListener('click',closeStart);
 $('toggle-controls').addEventListener('click',()=>{const shell=$('app-shell'),hidden=shell.classList.toggle('controls-hidden');$('toggle-controls').textContent=hidden?'CONTROLS +':'CONTROLS −';$('toggle-controls').setAttribute('aria-expanded',String(!hidden));});
 $('toggle-projects').addEventListener('click',()=>{const shell=$('app-shell'),hidden=shell.classList.toggle('projects-hidden');$('toggle-projects').textContent=hidden?'BOARDS +':'BOARDS −';$('toggle-projects').setAttribute('aria-expanded',String(!hidden));});
+function toggleUnlimitedIterationSelection(event){const compare=event.target.closest('[data-compare-id]');if(!compare)return;const id=compare.dataset.compareId;if(comparisonSelection.has(id))comparisonSelection.delete(id);else comparisonSelection.add(id);event.preventDefault();event.stopImmediatePropagation();renderProjects();}
+$('project-list').addEventListener('click',toggleUnlimitedIterationSelection,true);
+$('iteration-list').addEventListener('click',toggleUnlimitedIterationSelection,true);
 $('new-project').addEventListener('click',()=>{const name=prompt('Board name','UNTITLED BOARD');if(name===null)return;const project=newProject(name.trim().toUpperCase()||'UNTITLED BOARD');projectStore.projects.push(project);projectStore.activeProjectId=project.id;expandedBoards.add(project.id);saveProjects();renderProjects();});
 $('rename-project').addEventListener('click',()=>{const project=activeProject(),name=prompt('Board name',project.name);if(name===null)return;project.name=name.trim().toUpperCase()||project.name;saveProjects();renderProjects();});
 $('delete-project').addEventListener('click',()=>{const project=activeProject();if(!confirm(`Delete ${project.name} and its saved boards?`))return;projectStore.projects=projectStore.projects.filter(p=>p.id!==project.id);if(!projectStore.projects.length)projectStore.projects.push(newProject('FORM STUDIES'));projectStore.activeProjectId=projectStore.projects[0].id;saveProjects();renderProjects();});
