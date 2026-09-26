@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
-import {connectAnchors,interiorShare,networkTangents} from '../dist/network.mjs';
-import {makeAnchors} from '../dist/geometry.mjs';
+import {connectAnchors,interiorShare,networkTangents} from '../src/network.mjs';
+import {makeAnchors} from '../src/geometry.mjs';
 for(const n of [3,8,15]){
  const points=Array.from({length:n},(_,i)=>({id:i+1,x:Math.cos(i/n*Math.PI*2)*100,y:Math.sin(i/n*Math.PI*2)*100}));
  for(const from of [1,2,5,10])for(const to of [1,2,5,10]){

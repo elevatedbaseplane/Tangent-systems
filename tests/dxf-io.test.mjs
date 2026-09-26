@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
-import {makeAnchors} from '../dist/geometry.mjs';
-import {largestPolygon,parseDxfText,shapeDxf,lineSystemDxf} from '../dist/dxf-io.mjs';
+import {makeAnchors} from '../src/geometry.mjs';
+import {largestPolygon,parseDxfText,shapeDxf,lineSystemDxf} from '../src/dxf-io.mjs';
 
 const lw=`0\nSECTION\n2\nHEADER\n9\n$INSUNITS\n70\n4\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n70\n1\n10\n0\n20\n0\n10\n100\n20\n0\n10\n100\n20\n50\n10\n0\n20\n50\n0\nENDSEC\n0\nEOF\n`;
 const parsed=parseDxfText(lw);assert.equal(parsed.unitsCode,4);assert.deepEqual(parsed.shapes[0],[{x:0,y:0},{x:100,y:0},{x:100,y:50},{x:0,y:50}]);

@@ -1,0 +1,11 @@
+{
+  "name": "tangent-systems",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node tests/geometry.test.mjs && node tests/network.test.mjs && node tests/svg-io.test.mjs && node tests/dxf-io.test.mjs && node tests/app.test.mjs",
+    "dev": "node scripts/serve.mjs",
+    "build": "node scripts/build.mjs",
+    "check": "node scripts/check.mjs"
+  }
+}

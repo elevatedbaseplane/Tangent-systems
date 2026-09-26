@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
-import {anchorsFromPoints,fitAnchors} from '../dist/geometry.mjs';
-import {parsePointList,parseLinePath,parseTransform,parseSvgText,shapeSvg,lineSystemSvg} from '../dist/svg-io.mjs';
+import {anchorsFromPoints,fitAnchors} from '../src/geometry.mjs';
+import {parsePointList,parseLinePath,parseTransform,parseSvgText,shapeSvg,lineSystemSvg} from '../src/svg-io.mjs';
 assert.deepEqual(parsePointList('0,0 100,0 100,50 0,50'),[{x:0,y:0},{x:100,y:0},{x:100,y:50},{x:0,y:50}]);
 assert.deepEqual(parseLinePath('M 0 0 H 100 V 50 H 0 Z')[0],[{x:0,y:0},{x:100,y:0},{x:100,y:50},{x:0,y:50}]);
 assert.deepEqual(parseLinePath('m10 20 40 0 0 30 -40 0z')[0],[{x:10,y:20},{x:50,y:20},{x:50,y:50},{x:10,y:50}]);
